@@ -240,17 +240,17 @@ def plot_bar_chart_df(df):
     plt.show()
 
 def plot_result(res):
-    num_cols = len(result.columns)
+    num_cols = len(res.columns)
     num_rows = (num_cols + 1) // 2 
 
     # Creazione del grafico a barre
     fig, axs = plt.subplots(num_rows, 2, figsize=(15, 5*num_rows))
 
     # Itera sul DataFrame e crea i subplot
-    for i, (col_name, col_data) in enumerate(result.items()):
+    for i, (col_name, col_data) in enumerate(res.items()):
         row = i // 2
         col = i % 2
-        keys = result.index
+        keys = res.index
         values = col_data
         colors = plt.cm.RdBu(np.array(values) / max(values))
         
