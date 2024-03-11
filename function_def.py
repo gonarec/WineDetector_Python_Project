@@ -430,3 +430,56 @@ def trova_max(df):
     max_df = pd.DataFrame({'Max_Value': max_values, 'Index': max_indices})
     return max_df
 
+def restore_function_corr(corr_features, delta, dataframe, mean):
+    labels_with_nan = dataframe.columns[dataframe.isna().any()].tolist()
+    for label in labels_with_nan:
+        #Sostituisce le label in Feature2 da confrontare e le mette in Feature1 di relevant row
+        relevant_rows = corr_features[(corr_features['Feature1'] == label) | (corr_features['Feature2'] == label)]
+        swap_mask = relevant_rows['Feature2'] == label
+        relevant_rows.loc[swap_mask, ['Feature1', 'Feature2']] = relevant_rows.loc[swap_mask, ['Feature2', 'Feature1']].values
+        relevant_rows = relevant_rows.sort_values(by='Correlazione', ascending=False)
+        relevant_rows.reset_index(drop=True, inplace=True)
+
+        #dove non ce una seconda feature ne crea una fittizia di Nan
+        try:
+            second_corr_label_value = relevant_rows.iloc[1]['Feature2']
+        except IndexError:
+            second_corr_label_value = np.nan   #add a nan row
+            relevant_rows.loc[len(relevant_rows)] = np.nan
+
+        df_miss = dataframe[dataframe[label].isna()]
+        for count, value in enumerate(df_miss[relevant_rows.iloc[0]['Feature2']]):
+            indx=df_miss[relevant_rows.iloc[0]['Feature2']].index[count]
+            if pd.isna(value):
+                if pd.isna(relevant_rows.iloc[1]['Feature2']):
+                    if mean=='mean':
+                        dataframe.loc[indx,label] = round(dataframe[label].mean(skipna=True),2)
+                    else:
+                        dataframe.loc[indx,label] = round(dataframe[label].median(skipna=True),2)
+                else:
+                    if mean=='mean': 
+                        new_value=dataframe.loc[indx,relevant_rows.iloc[1]['Feature2']]
+                        correlated=dataframe[
+                            (dataframe[relevant_rows.iloc[1]['Feature2']] >= new_value*(1-delta)) &
+                            (dataframe[relevant_rows.iloc[1]['Feature2']] <= new_value*(1+delta))]
+                        dataframe.loc[indx,label] = round(correlated[label].mean(skipna=True),2)
+                    else:
+                        new_value=dataframe.loc[indx,relevant_rows.iloc[1]['Feature2']]
+                        correlated=dataframe[
+                            (dataframe[relevant_rows.iloc[1]['Feature2']] >= new_value*(1-delta)) &
+                            (dataframe[relevant_rows.iloc[1]['Feature2']] <= new_value*(1+delta))]
+                        dataframe.loc[indx,label] = round(correlated[label].median(skipna=True),2)
+
+            else:
+                if mean == 'mean':
+                    correlated=dataframe[
+                        (dataframe[relevant_rows.iloc[0]['Feature2']] >= value*(1-delta)) &
+                        (dataframe[relevant_rows.iloc[0]['Feature2']] <= value*(1+delta))]
+                    dataframe.loc[indx,label] = round(correlated[label].mean(skipna=True), 2)
+                else:
+                    correlated=dataframe[
+                        (dataframe[relevant_rows.iloc[0]['Feature2']] >= value*(1-delta)) &
+                        (dataframe[relevant_rows.iloc[0]['Feature2']] <= value*(1+delta))]
+                    dataframe.loc[indx,label] = round(correlated[label].median(skipna=True), 2)               
+
+    return dataframe
