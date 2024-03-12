@@ -5,13 +5,30 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import streamlit as st
 import base64
+from PIL import Image
 from function_def import replace_outliers_with_median, replace_outliers_with_mean, remove_outliers,new_quality_value
 from function_def import  classificator, plot_boxplots, plot_boxplots_comparision, plot_bar_chart_df, plot_result
 from function_def import classificator_evo, classification_evo, plot_result_evo, plot_bar_chart_df_evo, trova_max, restore_function_corr
 
-st.markdown(
+image_left = Image.open("ROB.jpeg")
+image_right = Image.open("ROB.jpeg")
+
+# Disposizione delle colonne
+col1, col2, col3 = st.columns([1, 4, 1])
+
+# Colonna sinistra con l'immagine
+with col1:
+    st.image(image_left, use_column_width=True)
+
+# Colonna centrale con il titolo
+with col2:
+    st.markdown(
     "<h1 style='text-align: center; color: blue;'>FIND THE BEST MODEL TO CLASSIFY YOUR DATABASE</h1>", 
     unsafe_allow_html=True)
+
+# Colonna destra con l'immagine
+with col3:
+    st.image(image_right, use_column_width=True)
 
 # Linea di testo
 st.write("")
@@ -25,23 +42,21 @@ file = st.file_uploader("Select a CSV file:")
 # Elaborazione del file se è stato caricato
 if file is not None:
     df = pd.read_csv(file)
-    st.write("This is your Dataset:")
+    st.markdown("<p style='color: yellow;'>THIS IS YOUR DATASET:</p>", unsafe_allow_html=True)
     new_df = df.copy()
     st.dataframe(new_df)
-    st.write(new_df.shape)  
-
-    
-    #feature_to_classify = st.text_input("Which feature do you want classify?")
-    #new_df=new_df.drop(columns=feature_to_classify)
+    st.write(new_df.shape) 
 
     corr_matrix = new_df.corr().abs()
-    corr_index = np.where((np.triu(corr_matrix, k=1) > 0.20)) # correlated index features
+    corr_index = np.where((np.triu(corr_matrix, k=1) > 0.20))
     corr_features = pd.DataFrame({
         'Feature1': corr_matrix.columns[corr_index[0]], #Feature1
         'Feature2': corr_matrix.columns[corr_index[1]], #Feature2
         'Correlazione': corr_matrix.values[corr_index]
     })
-
+    
+    #feature_to_classify = st.text_input("Which feature do you want classify?")
+    #new_df=new_df.drop(columns=feature_to_classify)
     # Creiamo il plot del heatmap
     #plt.figure(figsize=(8, 6))
     #sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".2f")
@@ -49,8 +64,8 @@ if file is not None:
 
     # Mostriamo il plot utilizzando Streamlit
     #st.pyplot(plt)
-if file is not None:
-    with st.expander("DATA CLEANING"):
+
+    with st.expander("DATA CLEANING - REMOVE OF NAN VALUE"):
         if new_df.isnull().values.any():
             st.markdown("<p style='color: yellow;'>There are Nan values in your Dataset.</p>", unsafe_allow_html=True)
             option = st.radio("Do you want to remove the Nan values?",  ("Yes", "No"))
@@ -92,5 +107,11 @@ if file is not None:
                 st.markdown("<p style='color: yellow;'>If you dont remove the perfomance of the classification can be compromised.</p>", unsafe_allow_html=True)
         else:
             st.markdown("<p style='color: yellow;'>The dataset is clean there are not Nan values inside.</p>", unsafe_allow_html=True)
-        
+    
+    with st.expander("DATA CLEANING - OUTLINER"):
+        st.markdown("<p style='color: yellow;'>BOXPLOT FEATURES: </p>", unsafe_allow_html=True)
+        plt.figure(figsize=(14, 10))
+        st.pyplot(plot_boxplots(new_df))
+        st.markdown("<p style='color: yellow;'>These are the boxplots of your dataset.</p>", unsafe_allow_html=True)
+        option = st.radio("Do you want to manage the outliner?",  ("Yes", "No"))
         

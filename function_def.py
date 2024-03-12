@@ -169,7 +169,7 @@ def plot_boxplots(dataframe):
         ax.tick_params(axis='x', rotation=45)
 
         # Imposta le etichette sull'asse y con precisione a tre cifre decimali
-        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.3f}'))
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.2f}'))
 
     # Rimuovi gli assi vuoti se ce ne sono
     for ax in axes[num_plots:]:
@@ -178,8 +178,7 @@ def plot_boxplots(dataframe):
     # Imposta il layout dei subplot
     plt.tight_layout()
 
-    # Mostra il grafico
-    plt.show()
+    return fig
 
 def plot_boxplots_comparision(dataframe_1, dataframe_clean_1):
     dataframe=dataframe_1.copy()
